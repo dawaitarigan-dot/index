@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJIIRWANSYAH - Smart Parlay Calculator</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: url('https://images.unsplash.com/photo-1736411049958-fb4f806c0419?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center/cover no-repeat; 
+            display: flex; justify-content: center; padding: 20px;
+            flex-direction: column; align-items: center;
+        }
+
+        .website-header {
+            width: 100%; max-width: 500px;
+            text-align: center; margin-bottom: 20px;
+        }
+        
+        .website-header img {
+            max-width: 80%; height: auto;
+        }
+
+        .container { 
+            background: #1e1e1e; padding: 25px; border-radius: 15px; 
+			opacity : 0.90;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 100%; max-width: 500px; 
+            border: 1px solid #1f2121;
+        }
+        
+        h2 { color: #0499c2; text-align: center; margin-bottom: 5px; letter-spacing: 2px; }
+        .subtitle { text-align: center; font-size: 0.8em; color: #fcfcfc; margin-bottom: 20px; }
+        
+        .row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; animation: fadeIn 0.3s; }
+        .row input { flex: 2; padding: 10px; border-radius: 5px; border: 1px solid #1f2121; background: #0499c2; color: white; }
+        .row select { flex: 1; padding: 10px; border-radius: 5px; background: #0499c2; color: black; font-weight: bold; cursor: pointer; }
+        
+        .main-input { margin-bottom: 20px; }
+        .main-input label { display: block; margin-bottom: 5px; color: #fcfcfc; font-size: 0.9em; }
+        .main-input input { width: 100%; padding: 12px; border-radius: 5px; border: 1px solid #1f2121; background: #0499c2; color: #fcfcfc; font-weight: bold; font-size: 1.1em; box-sizing: border-box; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        
+        button { 
+            flex: 1; padding: 15px; border: none; border-radius: 8px; 
+            font-weight: bold; font-size: 1em; cursor: pointer; transition: 0.3s; 
+        }
+
+        .btn-add { background: #0499c2; color: white; margin-bottom: 10px; width: 100%; }
+        .btn-add:hover { background: #0499c2; }
+        .btn-calc { background: #0499c2; color: black; }
+        .btn-calc:hover { background: #0499c2; }
+
+        .result { 
+            margin-top: 20px; padding: 20px; background: #0499c2; border-radius: 8px; border-left: 5px solid #0499c2; 
+        }
+        .highlight { color: #0499c2; font-weight: bold; }
+
+        .footer-info { margin-top: 25px; font-size: 0.8em; border-top: 1px solid #fcfcfc; padding-top: 15px; color: #fcfcfc; }
+        .footer-info strong { color: #fcfcfc; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <header class="website-header">
+        <Keep The Blue Flag Flying High
+    </header>
+
+    <div class="container">
+        <h2>AJI IRWANSYAH</h2>
+        <p class="subtitle">Kalkulator Parlay</p>
+
+        <div class="main-input">
+            <label>Modal Pasang (Stake)</label>
+            <input type="number" id="stake" placeholder="Masukkan Nominal">
+        </div>
+
+        <div id="parlay-rows">
+            <label style="font-size: 0.8em; color: #888;">Odds & Status Pertandingan (Max 10)</label>
+            <div class="row">
+                <input type="number" step="0.01" class="odds-val" placeholder="Odds Tim 1">
+                <select class="status-val">
+                    <option value="W">W</option> <option value="LH">LH</option> <option value="WH">WH</option>
+                </select>
+            </div>
+            <div class="row">
+                <input type="number" step="0.01" class="odds-val" placeholder="Odds Tim 2">
+                <select class="status-val">
+                    <option value="W">W</option> <option value="LH">LH</option> <option value="WH">WH</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-add" id="add-match-btn" onclick="addMatchRow()">+ Tambah Tim</button>
+
+        <button class="btn-calc" onclick="calculate()">HITUNG KEMENANGAN</button>
+
+        <div class="result" id="res-box" style="display:none;">
+            <p>Total Odds Akhir: <span id="res-odds" class="highlight">0</span></p>
+            <p>Kemenangan Bersih: <span id="res-win" class="highlight">0</span></p>
+            <p>Total Bayaran: <span id="res-total" class="highlight">0</span></p>
+        </div>
+
+        <div class="footer-info">
+            <p><strong>Keterangan Rumus:</strong></p>
+            <ul>
+                <li><strong>W (Win):</strong> Odds dikali penuh.</li>
+                <li><strong>LH (Lose Half):</strong> Odds dihitung 0.5 (Total parlay dibagi 2).</li>
+                <li><strong>WH (Win Half):</strong> ((Odds - 1) / 2) + 1.</li>
+                <li><strong>D (Draw):</strong> Odds 0 (Tidak dihitung).</li>
+            </ul>
+        </div>
+    </div>
+
+<script>
+    let matchCount = 2; // Memulai dari 2 baris awal
+
+    function addMatchRow() {
+        if (matchCount < 10) {
+            matchCount++;
+            const container = document.getElementById('parlay-rows');
+            const newRow = document.createElement('div');
+            newRow.className = 'row';
+            newRow.innerHTML = `
+                <input type="number" step="0.01" class="odds-val" placeholder="Odds Tim ${matchCount}">
+                <select class="status-val">
+                    <option value="W">W</option>
+                    <option value="LH">LH</option>
+                    <option value="WH">WH</option>
+                </select>
+            `;
+            container.appendChild(newRow);
+            
+            if (matchCount === 10) {
+                document.getElementById('add-match-btn').innerText = "Maksimal 10 Tim";
+                document.getElementById('add-match-btn').disabled = true;
+                document.getElementById('add-match-btn').style.opacity = "0.5";
+            }
+        }
+    }
+
+    function calculate() {
+        const stake = parseFloat(document.getElementById('stake').value);
+        const oddsElements = document.querySelectorAll('.odds-val');
+        const statusElements = document.querySelectorAll('.status-val');
+        
+        if (isNaN(stake) || stake <= 0) {
+            alert("Masukkan nominal stake!");
+            return;
+        }
+
+        let finalOdds = 1;
+        let validMatch = 0;
+
+        for (let i = 0; i < oddsElements.length; i++) {
+            let o = parseFloat(oddsElements[i].value);
+            let s = statusElements[i].value;
+
+            if (!isNaN(o) && o > 0) {
+                validMatch++;
+                if (s === "W") finalOdds *= o;
+                else if (s === "LH") finalOdds *= 0.5;
+                else if (s === "WH") finalOdds *= ((o - 1) / 2) + 1;
+            }
+        }
+
+        if (validMatch === 0) {
+            alert("Masukkan minimal satu odds!");
+            return;
+        }
+
+        const totalPay = stake * finalOdds;
+        const winNet = totalPay - stake;
+
+        document.getElementById('res-odds').innerText = finalOdds.toFixed(3);
+        document.getElementById('res-win').innerText = "Rp " + Math.floor(winNet).toLocaleString('id-ID');
+        document.getElementById('res-total').innerText = "Rp " + Math.floor(totalPay).toLocaleString('id-ID');
+        document.getElementById('res-box').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
